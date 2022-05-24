@@ -44,36 +44,6 @@
       </div>
       <div class="jumbotron">
         <h1>The next big thing is coming...</h1>
-        <div class="table-data">
-          <h2>Display Data using Node.js & MySQL</h2>
-              <table border="1">
-                  <tr>            
-                      <th>Email</th>
-                      <th>Name</th>                    
-                      <th>Preview</th>
-                  </tr>
-                  
-                  <%
-                  if(ripData.length!=0){
-                  var i=1;
-                  userData.forEach(function(data){
-                  %>
-                  <tr>
-                      <td><%=i; %></td>
-                      <td><%=data%></td>
-                      <td><%=data.email %></td>
-                      <td><%=data.name %></td>
-                      <td><%=data.previewAccess %></td>
-                      
-                  </tr>
-                  <%  i++; }) %>
-                  <% } else{ %>
-                      <tr>
-                          <td colspan="7">No Data Found</td>
-                      </tr>
-                  <% } %>
-              </table>
-              </div>
         <p class="lead">We're pretty thrilled to unveil our latest creation. Boob Sign up below to be notified when we officially launch!</p>
         <p><a class="btn btn-lg btn-success"  data-toggle="modal" href="#signupModal">Sign up today</a></p>
       </div>

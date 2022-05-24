@@ -27,6 +27,25 @@ if (cluster.isMaster) {
     var AWS = require('aws-sdk');
     var express = require('express');
     var bodyParser = require('body-parser');
+    var mysql = require('mysql');
+
+    var db = mysql.createConnection({
+        host     : process.env.RDS_HOSTNAME,
+        user     : process.env.RDS_USERNAME,
+        password : process.env.RDS_PASSWORD,
+        port     : process.env.RDS_PORT
+      });
+      
+      db.connect(function(err) {
+        if (err) {
+          console.error('Database connection failed: ' + err.stack);
+          return;
+        }
+      
+        console.log('Connected to database.');
+      });
+      
+      db.end();
 
     AWS.config.region = process.env.REGION
 
@@ -42,29 +61,18 @@ if (cluster.isMaster) {
     app.set('views', __dirname + '/views');
     app.use(bodyParser.urlencoded({extended:false}));
 
-    app.get('/', function(req, res, next){
-        var params = {                      
-            'TableName': 'nodejs-tutorial',
-            'Key': {'email': {S: 'David'} }  
-            };
-        ddb.getItem(params, function(err, data) {
-            if (err) {
-                  console.log("Error", err);
-            } else {
-                console.log("Success", data.Item);
-                next(data.Item)
-            }
-        }) 
-        
-        
-    },  function(req, res, result) {
+    app.get('/', function(req, res) {
         res.render('index', {
-            ripData: result,
             static_path: 'static',
             theme: process.env.THEME || 'flatly',
             flask_debug: process.env.FLASK_DEBUG || 'false'
         });
     });
+
+    /*app.get('/createdb',(req,res)=>{
+        let sql = 
+
+    })*/
 
     app.post('/signup', function(req, res) {
         var item = {
