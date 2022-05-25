@@ -33,7 +33,8 @@ if (cluster.isMaster) {
         host     : process.env.RDS_HOSTNAME,
         user     : process.env.RDS_USERNAME,
         password : process.env.RDS_PASSWORD,
-        port     : process.env.RDS_PORT
+        port     : process.env.RDS_PORT,
+        database : 'ripperDB'
       });
       
       db.connect(function(err) {
@@ -45,7 +46,6 @@ if (cluster.isMaster) {
         console.log('Connected to database.');
       });
       
-      db.end();
 
     AWS.config.region = process.env.REGION
 
@@ -61,19 +61,73 @@ if (cluster.isMaster) {
     app.set('views', __dirname + '/views');
     app.use(bodyParser.urlencoded({extended:false}));
 
-    app.get('/', function(req, res) {
+    app.get('/', function(req, res, next) {
+        var sql = 'SELECT * FROM rips WHERE rip_time = (SELECT MAX(rip_time) FROM rips)';
+        
+        db.query(sql, function (err, data, fields){
+            if (err) throw err;    
+            console.log(data[0].rip_number);         
         res.render('index', {
+            ripData    : data[0].rip_number,
             static_path: 'static',
             theme: process.env.THEME || 'flatly',
             flask_debug: process.env.FLASK_DEBUG || 'false'
         });
+      });
     });
 
-    /*app.get('/createdb',(req,res)=>{
-        let sql = 
+    app.get('/createdb',(req, res)=>{
+        let sql = "CREATE DATABASE ripperDB";
 
-    })*/
+        db.query(sql, (err) => {
 
+            if (err) {
+        
+              throw err;
+        
+            }
+        
+            res.send("Database created");
+        
+          });
+        
+        });
+
+    app.get('/createRipTable',(req,res)=>{
+        let sql = "CREATE TABLE rips (id int AUTO_INCREMENT PRIMARY KEY, rip_number int, comment VARCHAR(240), rip_time DATETIME)";
+
+        db.query(sql, (err) => {
+
+            if (err) {
+        
+              throw err;
+        
+            }
+        
+            res.send("rip Table created");
+        
+          });
+        });
+
+    app.get('/insertRip',(req,res)=>{
+        let post = {rip_number: 321, comment: "First rip in the DB", rip_time: "2022-05-24 00:00:00"};
+
+        let sql = "INSERT INTO rips SET ?";
+    
+        db.query(sql, post, (err) => {
+    
+        if (err) {
+            
+            throw err;
+            
+            }
+            
+            res.send("rip inserted");
+            
+            });
+        });
+
+  
     app.post('/signup', function(req, res) {
         var item = {
             'email': {'S': req.body.email},
