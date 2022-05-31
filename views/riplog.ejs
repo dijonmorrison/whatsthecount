@@ -6,8 +6,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>What's the count?</title>
-    <link rel="icon" href="" type="image/png" />
+    <title>A New Startup: Sign Up Today!</title>
 
     <!-- Bootstrap core CSS -->
     <link href="<%= static_path + "/bootstrap/css/theme/" + theme + "/bootstrap.css" %>" rel="stylesheet">
@@ -22,11 +21,10 @@
     <div class="container">
       <div class="header">
         <ul class="nav nav-pills pull-right">
-          <li class="active"><a href="/">Home</a></li>
-          <li><a href="#">Rip Log</a></li>
-          <!-- <li><a href="riplog">Rip Log</a></li> -->
+          <li><a href="/">Home</a></li>
+          <li class="active"><a href="#">Rip Log</a></li>
         </ul>
-        <h3 class="text-muted">What's the count?</h3>
+        <h3 class="text-muted">A New Startup</h3>
       </div>
 	  <% if (flask_debug === 'true') { %>
       <div class="alert alert-danger">
@@ -34,23 +32,23 @@
       </div>
       <% } %>
       <div id="signupSuccess" class="alert alert-success" style="display:none">
-        <p id="signupSuccessText">Rip Inserted!</p>
+        <p id="signupSuccessText">Thanks for signing up! You'll be among the first to know when we launch.</p>
       </div>
       <div id="signupDuplicate" class="alert alert-success" style="display:none">
         <p id="signupDuplicateText">Fear not, you're already on the list! You'll be among the first to know when we launch.</p>
       </div>
       <div id="signupError" class="alert alert-info" style="display:none">
-        <p id="signupErrorText">Invalid credentials.</p>
+        <p id="signupErrorText">Well this is embarrassing. It looks like we're having trouble getting you on the list.</p>
       </div>
       <div class="jumbotron">
-        <h2 style="font-size:100px">The count is:</h2>
+        <h2>The rip count is:</h2>
         <h1><%= ripData %></h1>
-        <p><a class="btn btn-lg btn-success"  data-toggle="modal" href="#signupModal">Initiate Rip</a></p>
+        <p><a class="btn btn-lg btn-success"  data-toggle="modal" href="#signupModal">RIP</a></p>
       </div>
 
 
       <div class="footer">
-        <p>&copy; For Rippers, by Rippers</p>
+        <p>&copy; In the riplog</p>
       </div>
       
       <!-- Modal -->
@@ -66,7 +64,7 @@
                  <input type="hidden" id="theme" name="theme" value="<%= theme %>"/>
                  <div class="form-group">
                   <label for="comment">Credentials</label>
-                  <input type="password" class="form-control" id="creds" name="creds" placeholder="Credentials">
+                  <input type="text" class="form-control" id="creds" name="creds" placeholder="Credentials">
                 </div>
                  <div class="form-group">
                    <label for="rip_Number">Rip Number</label>
@@ -78,7 +76,7 @@
                  </div>
              </div>
              <div class="modal-footer">
-               <button id="signup" type="button" class="btn btn-primary">RIP!</button>
+               <button id="signup" type="button" class="btn btn-primary">Rip</button>
              </div>
            </div><!-- /.modal-content -->
          </div><!-- /.modal-dialog -->
@@ -91,33 +89,25 @@
     <script type="text/javascript">
     $(document).ready(function() {
       $("#signup").click(function() {
-        $.post("/signup", $("#signupForm").serialize(),
+        $.post( "/signup", $("#signupForm").serialize(),
                 function(data) {
-                  console.log(data.creds)
-                  if (data.creds == 'valid'){
-                    $("#signupSuccess").show();
-                  }else{
-                    $("#signupError").show();
-                  }
+                  $("#signupSuccess").show();
                 }
               )
               .error(function(xhr) {
                 switch(xhr.status) {
-                    case 409:
+                  case 409:
                     $("#signupDuplicate").show();
                     break;
-                    default:
+                  default:
                     $("#signupError").show();
                 }
               })
               .always(function() {
                 $("#signupModal").modal('hide');
-                setTimeout(() => { location.reload(); }, 3000);
-                
-              })
+              });
       })
     })
     </script>
-    <script src="../JS/favicon.js"></script>
   </body>
 </html>

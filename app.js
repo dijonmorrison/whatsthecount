@@ -37,11 +37,11 @@ if (cluster.isMaster) {
         database : 'ripperDB'
       });
       
-      db.connect(function(err) {
-        if (err) {
-          console.error('Database connection failed: ' + err.stack);
-          return;
-        }
+    db.connect(function(err) {
+      if (err) {
+        console.error('Database connection failed: ' + err.stack);
+      return;
+      }
       
         console.log('Connected to database.');
       });
@@ -70,11 +70,27 @@ if (cluster.isMaster) {
         res.render('index', {
             ripData    : data[0].rip_number,
             static_path: 'static',
+            theme: process.env.THEME ,
+            flask_debug: process.env.FLASK_DEBUG || 'false'
+        });
+      });
+    });
+    /*
+    app.get('/riplog', function(req, res, next) {
+        var sql = 'SELECT * FROM rips WHERE rip_time = (SELECT MAX(rip_time) FROM rips)';
+        
+        db.query(sql, function (err, data, fields){
+            if (err) throw err;    
+            console.log(data[0].rip_number);         
+        res.render('riplog', {
+            ripData    : data[0].rip_number,
+            static_path: 'static',
             theme: process.env.THEME || 'flatly',
             flask_debug: process.env.FLASK_DEBUG || 'false'
         });
       });
     });
+    */
 
     app.get('/createdb',(req, res)=>{
         let sql = "CREATE DATABASE ripperDB";
@@ -82,13 +98,9 @@ if (cluster.isMaster) {
         db.query(sql, (err) => {
 
             if (err) {
-        
-              throw err;
-        
+              throw err;     
             }
-        
-            res.send("Database created");
-        
+            res.send("Database created");   
           });
         
         });
@@ -109,6 +121,23 @@ if (cluster.isMaster) {
           });
         });
 
+    app.get('/createRipCount',(req,res)=>{
+      let sql = "CREATE TABLE ripCount ("
+    } )
+    
+    app.get('/queryTable',(req,res)=>{
+        let sql = "SELECT * FROM rips"
+
+        db.query(sql, function(err, result, fields){
+
+            if (err) {
+                  throw err; 
+            }
+            res.send(result);        
+          });
+        });
+    
+
     app.get('/insertRip',(req,res)=>{
         let post = {rip_number: 321, comment: "First rip in the DB", rip_time: "2022-05-24 00:00:00"};
 
@@ -116,57 +145,50 @@ if (cluster.isMaster) {
     
         db.query(sql, post, (err) => {
     
-        if (err) {
-            
+        if (err) {        
             throw err;
-            
-            }
-            
-            res.send("rip inserted");
-            
+          }           
+                       
+            });
+        });
+
+    app.get('/deleteRips',(req,res)=>{
+
+        let sql = "DELETE FROM rips;";
+    
+        db.query(sql, (err) => {
+    
+        if (err) {        
+            throw err;
+          }           
+        res.send("Rips deleted");            
             });
         });
 
   
     app.post('/signup', function(req, res) {
+
+        var creds = req.body.creds;
+        
         var item = {
-            'email': {'S': req.body.email},
-            'name': {'S': req.body.name},
-            'preview': {'S': req.body.previewAccess},
-            'theme': {'S': req.body.theme}
+            'rip_number': req.body.rip_number,
+            'comment': req.body.comment,
+            'rip_time': new Date().toISOString().slice(0, 19).replace('T', ' ')
         };
 
-        ddb.putItem({
-            'TableName': ddbTable,
-            'Item': item,
-            'Expected': { email: { Exists: false } }        
-        }, function(err, data) {
-            if (err) {
-                var returnStatus = 500;
-
-                if (err.code === 'ConditionalCheckFailedException') {
-                    returnStatus = 409;
-                }
-
-                res.status(returnStatus).end();
-                console.log('DDB Error: ' + err);
-            } else {
-                sns.publish({
-                    'Message': 'Name: ' + req.body.name + "\r\nEmail: " + req.body.email 
-                                        + "\r\nPreviewAccess: " + req.body.previewAccess 
-                                        + "\r\nTheme: " + req.body.theme,
-                    'Subject': 'New user sign up!!!',
-                    'TopicArn': snsTopic
-                }, function(err, data) {
-                    if (err) {
-                        res.status(500).end();
-                        console.log('SNS Error: ' + err);
-                    } else {
-                        res.status(201).end();
-                    }
-                });            
-            }
-        });
+        let sql = "INSERT INTO rips SET ?";
+        
+        if(authenticate(creds)){
+          db.query(sql, item, (err) => {  
+            if (err) {     
+              console.log(err)   
+              throw err;
+            }  
+          res.send({creds: 'valid'}); 
+          });
+        }else{
+          res.send({creds: 'invalid'});
+        }
     });
 
     var port = process.env.PORT || 3000;
@@ -174,5 +196,21 @@ if (cluster.isMaster) {
     var server = app.listen(port, function () {
         console.log('Server running at http://127.0.0.1:' + port + '/');
     });
+
+    function authenticate(creds){
+
+      let validCreds = ['2690', '6318'];
+
+      let authUser = false;
+
+      if (validCreds.includes(creds)){
+        authUser = true;
+      }
+      
+      console.log('authUser:' + authUser)
+      return authUser;
+    }
+
+
 }
 
